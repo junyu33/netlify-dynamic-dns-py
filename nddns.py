@@ -26,13 +26,14 @@ def get_dns_zone_id():
 
 # Step 1: Find the record_id for the subdomain
 def get_record_id():
+    res = []
     response = requests.get(f"https://api.netlify.com/api/v1/dns_zones/{DNS_ZONE_ID}/dns_records", headers=headers)
     response.raise_for_status()
     records = response.json()
     for record in records:
-        if record["hostname"] == SUBDOMAIN:
-            return record["id"]
-    return None
+        if record["hostname"] == WHOLE_DOMAIN:
+            res.append(record["id"])
+    return res
 
 # Step 2: Delete the existing DNS record
 def delete_dns_record(record_id):
@@ -43,7 +44,7 @@ def delete_dns_record(record_id):
 # Step 3: Create a new DNS record with the updated IP
 def create_dns_record():
     payload = {
-        "hostname": SUBDOMAIN,
+        "hostname": WHOLE_DOMAIN,
         "type": "A",
         "value": NEW_IP,
         "ttl": 3600
@@ -54,7 +55,7 @@ def create_dns_record():
 
 # Execute the steps
 DNS_ZONE_ID = get_dns_zone_id()
-record_id = get_record_id()
-if record_id:
+records = get_record_id()
+for record_id in records:
     delete_dns_record(record_id)
 create_dns_record()

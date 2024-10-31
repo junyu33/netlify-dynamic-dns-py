@@ -13,7 +13,7 @@ pip3 install -r requirements.txt
 Fill your `ACCESSTOKEN`, `ZONE` (root domain) and `RECORD` (subdomain) in `ddns.sh` and run it.
 
 ```bash
-sh ddns.sh
+bash ddns.sh
 ```
 
 ## License
