@@ -1,9 +1,7 @@
 #!/bin/bash
 
 # Configuration
-ACCESSTOKEN="<your_access_token>"  # Netlify API access token
-ZONE="<your_root_domain>"          # Domain name (Netlify DNS zone)
-RECORD="<your_subdomain>"          # Subdomain (rdp.junyu33.me)
+source ./config.sh
 
 # Get the current public IPv4 (without using proxy)
 IP=$(curl --noproxy '*' -s http://ipv4.icanhazip.com)
