@@ -2,14 +2,14 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import sys
+import time
 
 # Replace with your Netlify token and DNS zone ID
-NEW_IP = sys.argv[1]
-API_TOKEN = sys.argv[2]
+CERTBOT_DOMAIN = '_acme-challenge.' + sys.argv[1]
+CERTBOT_VALIDATION = sys.argv[2]
+DOMAIN = sys.argv[3]
+API_TOKEN = sys.argv[4]
 DNS_ZONE_ID = ""
-DOMAIN = sys.argv[3]  # Root domain
-SUBDOMAIN = sys.argv[4]
-WHOLE_DOMAIN = SUBDOMAIN + "." + DOMAIN
 
 # Headers for authentication
 headers = {
@@ -50,32 +50,48 @@ def get_record_id():
     response.raise_for_status()
     records = response.json()
     for record in records:
-        if record["hostname"] == WHOLE_DOMAIN:
+        if record["hostname"] == CERTBOT_DOMAIN:
             res.append(record["id"])
-    return res
+    return res, len(res)
 
 # Step 2: Delete the existing DNS record
 def delete_dns_record(record_id):
     response = session.delete(f"https://api.netlify.com/api/v1/dns_zones/{DNS_ZONE_ID}/dns_records/{record_id}", headers=headers)
     response.raise_for_status()
-    print(f"Deleted DNS record for {SUBDOMAIN}")
+    print(f"Deleted DNS record for {CERTBOT_DOMAIN}")
 
 # Step 3: Create a new DNS record with the updated IP
 def create_dns_record():
     payload = {
-        "hostname": WHOLE_DOMAIN,
-        "type": "A",
-        "value": NEW_IP,
+        "hostname": CERTBOT_DOMAIN,
+        "type": "TXT",
+        "value": CERTBOT_VALIDATION,
         "ttl": 3600
     }
     response = session.post(f"https://api.netlify.com/api/v1/dns_zones/{DNS_ZONE_ID}/dns_records", headers=headers, json=payload)
     response.raise_for_status()
-    print(f"Created DNS record for {SUBDOMAIN} with IP {NEW_IP}")
+    print(f"Created DNS TXT record for {CERTBOT_DOMAIN} with RECORD {CERTBOT_VALIDATION}")
 
 # Execute the steps
-DNS_ZONE_ID = get_dns_zone_id()
-records = get_record_id()
-for record_id in records:
-    delete_dns_record(record_id)
-create_dns_record()
+'''
+CLEAN_FLAG = 0
+if len(sys.argv) > 5:
+    if sys.argv[5] == "--cleanup":
+        CLEAN_FLAG = 1
 
+DNS_ZONE_ID = get_dns_zone_id()
+if CLEAN_FLAG:
+    records = get_record_id()
+    for record_id in records:
+        delete_dns_record(record_id)
+else:
+    create_dns_record()
+'''
+
+DNS_ZONE_ID = get_dns_zone_id()
+records, len = get_record_id()
+if len >= 1:
+    for record_id in records:
+        delete_dns_record(record_id)
+create_dns_record()
+time.sleep(30)
