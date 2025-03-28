@@ -4,7 +4,7 @@
 source ./config.sh
 
 # Get the current public IPv4 (without using proxy)
-IP=$(curl --noproxy '*' -s http://ipv4.icanhazip.com)
+IP=$(ip -4 addr show ppp0 | grep inet | awk '{print $2}' | cut -d'/' -f1)
 
 python3 nddns.py "$IP" "$ACCESSTOKEN" "$ZONE" "$RECORD"
 
